@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  hadoop:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: hadoop-namenode
+    volumes:
+      - ./hadoop_namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=test
+    env_file:
+      - ./hadoop.env
+    ports:
+      - "9870:9870"
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: hadoop-datanode
+    volumes:
+      - ./hadoop_datanode:/hadoop/dfs/data
+    environment:
+      - SERVICE_PRECONDITION=hadoop-namenode:9870
+    env_file:
+      - ./hadoop.env
+    ports:
+      - "9864:9864"
+
+  pig:
+    image: sequenceiq/pig:latest
+    container_name: pig
+    depends_on:
+      - hadoop
+    volumes:
+      - ./data:/data
+    environment:
+      - HADOOP_USER_NAME=hdfs
+    entrypoint: ["./bin/pig"]
+
+volumes:
+  hadoop_namenode:
+  hadoop_datanode:
+
+networks:
+  default:
+    driver: bridge
+
